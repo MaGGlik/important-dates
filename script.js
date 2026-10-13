@@ -1,5 +1,4 @@
-// ===== СПИСОК РОССИЙСКИХ ПРАЗДНИКОВ =====
-const holidays = [
+const holidayList = [
   { name: '🎄 Новый год', month: 0, day: 1 },
   { name: '🎁 Рождество Христово', month: 0, day: 7 },
   { name: '🛡️ День защитника Отечества', month: 1, day: 23 },
@@ -10,133 +9,129 @@ const holidays = [
   { name: '🕊️ День народного единства', month: 10, day: 4 }
 ];
 
-// ===== ЧАСЫ =====
-function updateClock() {
+function tickClock() {
   const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-  document.getElementById('clock').innerText = hours + ':' + minutes + ':' + seconds;
 
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = now.getFullYear();
-  document.getElementById('today').innerText = 'Сегодня: ' + day + '.' + month + '.' + year;
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  document.getElementById('clock').innerText = hh + ':' + mm + ':' + ss;
+
+  const dd = String(now.getDate()).padStart(2, '0');
+  const mo = String(now.getMonth() + 1).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  document.getElementById('today').innerText = 'Сегодня: ' + dd + '.' + mo + '.' + yyyy;
 }
 
-updateClock();
-setInterval(updateClock, 1000);
+tickClock();
+setInterval(tickClock, 1000);
 
-// ===== РАСЧЁТ ДАТ ПРАЗДНИКОВ =====
-function getHolidayDate(holiday, year) {
+function holidayDateFor(holiday, year) {
   return new Date(year, holiday.month, holiday.day);
 }
 
-function getNextHolidayDate(holiday) {
+function nextDateFor(holiday) {
   const now = new Date();
-  let date = getHolidayDate(holiday, now.getFullYear());
-  if (date < now) {
-    date = getHolidayDate(holiday, now.getFullYear() + 1);
+  let d = holidayDateFor(holiday, now.getFullYear());
+  if (d < now) {
+    d = holidayDateFor(holiday, now.getFullYear() + 1);
   }
-  return date;
+  return d;
 }
 
-function daysUntil(date) {
+function daysLeft(date) {
   const now = new Date();
-  const diff = date - now;
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  return Math.ceil((date - now) / (1000 * 60 * 60 * 24));
 }
 
-// ===== БЛИЖАЙШИЙ ПРАЗДНИК + ПРОГРЕСС-БАР =====
-function updateNearestHoliday() {
+function renderNearest() {
   const now = new Date();
 
-  const list = holidays.map(h => ({
-    ...h,
-    date: getNextHolidayDate(h),
-    days: daysUntil(getNextHolidayDate(h))
-  }));
+  const prepared = holidayList.map(h => {
+    const next = nextDateFor(h);
+    return {
+      name: h.name,
+      date: next,
+      days: daysLeft(next)
+    };
+  });
 
-  list.sort((a, b) => a.days - b.days);
+  prepared.sort((a, b) => a.days - b.days);
 
-  const nearest = list[0];
+  const nearest = prepared[0];
   document.getElementById('nearest-name').innerText = nearest.name;
   document.getElementById('nearest-days').innerText = 'Осталось: ' + nearest.days + ' дней';
 
-  const prevDate = new Date(nearest.date);
-  prevDate.setFullYear(prevDate.getFullYear() - 1);
+  const prev = new Date(nearest.date);
+  prev.setFullYear(prev.getFullYear() - 1);
 
-  const total = nearest.date - prevDate;
-  const passed = now - prevDate;
+  const total = nearest.date - prev;
+  const passed = now - prev;
   const percent = Math.min(100, Math.max(0, (passed / total) * 100));
 
   document.getElementById('progress-fill').style.width = percent + '%';
   document.getElementById('progress-text').innerText =
     'Прошло ' + Math.round(percent) + '% времени до праздника';
 
-  const listContainer = document.getElementById('holidays-list');
-  listContainer.innerHTML = '';
-  list.forEach(h => {
-    const item = document.createElement('div');
-    item.className = 'holiday-item';
-    item.innerHTML = '<span class="name">' + h.name + '</span>' +
-                     '<span class="days">' + h.days + ' дн.</span>';
-    listContainer.appendChild(item);
+  const box = document.getElementById('holidays-list');
+  box.innerHTML = '';
+
+  prepared.forEach(h => {
+    const row = document.createElement('div');
+    row.className = 'holiday-item';
+    row.innerHTML =
+      '<span class="name">' + h.name + '</span>' +
+      '<span class="days">' + h.days + ' дн.</span>';
+    box.appendChild(row);
   });
 }
 
-updateNearestHoliday();
-setInterval(updateNearestHoliday, 60000);
+renderNearest();
+setInterval(renderNearest, 60000);
 
-// ===== СВОЯ ДАТА =====
 function showCustomDays() {
-  const input = document.getElementById('user-date').value;
+  const value = document.getElementById('user-date').value;
 
-  if (!input) {
+  if (!value) {
     document.getElementById('custom-result').innerText = 'Пожалуйста, выбери дату';
     return;
   }
 
   const now = new Date();
-  const targetDate = new Date(input);
-  const diffTime = targetDate - now;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const target = new Date(value);
+  const diff = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
 
-  if (diffDays < 0) {
+  if (diff < 0) {
     document.getElementById('custom-result').innerText =
-      'Эта дата уже прошла (' + Math.abs(diffDays) + ' дней назад)';
-  } else if (diffDays === 0) {
+      'Эта дата уже прошла (' + Math.abs(diff) + ' дней назад)';
+  } else if (diff === 0) {
     document.getElementById('custom-result').innerText = 'Это сегодня! 🎉';
   } else {
     document.getElementById('custom-result').innerText =
-      'До этой даты осталось: ' + diffDays + ' дней';
+      'До этой даты осталось: ' + diff + ' дней';
   }
 }
 
-// ===== РАЗНИЦА МЕЖДУ ДВУМЯ ДАТАМИ =====
 function calcDifference() {
-  const fromInput = document.getElementById('date-from').value;
-  const toInput = document.getElementById('date-to').value;
+  const fromValue = document.getElementById('date-from').value;
+  const toValue = document.getElementById('date-to').value;
 
-  if (!fromInput || !toInput) {
+  if (!fromValue || !toValue) {
     document.getElementById('diff-result').innerText = 'Выбери обе даты';
     return;
   }
 
-  const fromDate = new Date(fromInput);
-  const toDate = new Date(toInput);
+  const fromDate = new Date(fromValue);
+  const toDate = new Date(toValue);
 
   if (toDate < fromDate) {
-    document.getElementById('diff-result').innerText = 
+    document.getElementById('diff-result').innerText =
       'Вторая дата должна быть позже первой';
     return;
   }
 
-  // Разница в днях
-  const diffTime = toDate - fromDate;
-  const totalDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+  const totalDays = Math.round((toDate - fromDate) / (1000 * 60 * 60 * 24));
 
-  // Разница в годах, месяцах, днях
   let years = toDate.getFullYear() - fromDate.getFullYear();
   let months = toDate.getMonth() - fromDate.getMonth();
   let days = toDate.getDate() - fromDate.getDate();
@@ -152,10 +147,10 @@ function calcDifference() {
     months += 12;
   }
 
-  let result = 'Разница: ' + totalDays + ' дней';
+  let text = 'Разница: ' + totalDays + ' дней';
   if (years > 0 || months > 0) {
-    result += ' (' + years + ' г. ' + months + ' мес. ' + days + ' дн.)';
+    text += ' (' + years + ' г. ' + months + ' мес. ' + days + ' дн.)';
   }
 
-  document.getElementById('diff-result').innerText = result;
+  document.getElementById('diff-result').innerText = text;
 }
