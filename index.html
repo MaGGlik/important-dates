@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Важные даты</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="card">
+      <h1>⏰ Сейчас:</h1>
+      <div id="clock">Загрузка...</div>
+      <div id="today">Загрузка...</div>
+    </div>
+
+    <div class="card highlight">
+      <h2>🎯 Ближайший праздник:</h2>
+      <div id="nearest-name">Загрузка...</div>
+      <div id="nearest-days">Загрузка...</div>
+      <div class="progress-bar">
+        <div id="progress-fill"></div>
+      </div>
+      <div id="progress-text"></div>
+    </div>
+
+    <div class="card">
+      <h2>📅 Все праздники:</h2>
+      <div id="holidays-list"></div>
+    </div>
+
+    <div class="card">
+      <h2>📆 Разница между датами:</h2>
+      <div class="custom-date">
+        <input type="date" id="date-from">
+        <input type="date" id="date-to">
+      </div>
+      <button onclick="calcDifference()" style="margin-top: 15px;">Посчитать разницу</button>
+      <div id="diff-result"></div>
+    </div>
+
+    <div class="card">
+      <h2>Своя дата:</h2>
+      <div class="custom-date">
+        <input type="date" id="user-date">
+        <button onclick="showCustomDays()">Узнать</button>
+      </div>
+      <div id="custom-result"></div>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
